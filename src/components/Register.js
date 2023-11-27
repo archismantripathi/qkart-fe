@@ -11,7 +11,10 @@ import "./Register.css";
 const Register = () => {
   const { enqueueSnackbar } = useSnackbar();
 
-
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [isBusy, setIsBusy] = useState(false);
   // TODO: CRIO_TASK_MODULE_REGISTER - Implement the register function
   /**
    * Definition for register handler
@@ -36,6 +39,39 @@ const Register = () => {
    * }
    */
   const register = async (formData) => {
+    setIsBusy(true);
+    if (validateInput(formData))
+      try {
+        const res = await axios.post(config.endpoint + "/auth/register", {
+          username,
+          password,
+        });
+        if (res.status === 201) {
+          enqueueSnackbar("Registered successfully", {
+            variant: "success",
+            duration: 6000,
+          });
+          setUsername("");
+          setPassword("");
+          setConfirmPassword("");
+        } else
+          enqueueSnackbar("Something is not right!", {
+            variant: "warning",
+            duration: 6000,
+          });
+      } catch (error) {
+        if (error.response)
+          enqueueSnackbar(error.response.data.message, {
+            variant: "error",
+            duration: 6000,
+          });
+        else
+          enqueueSnackbar("Server is not reachable.", {
+            variant: "error",
+            duration: 6000,
+          });
+      }
+    setIsBusy(false);
   };
 
   // TODO: CRIO_TASK_MODULE_REGISTER - Implement user input validation logic
@@ -57,6 +93,38 @@ const Register = () => {
    * -    Check that confirmPassword field has the same value as password field - Passwords do not match
    */
   const validateInput = (data) => {
+    if (!data.username.length) {
+      enqueueSnackbar("Username is a required field.", {
+        variant: "warning",
+        duration: 6000,
+      });
+      return false;
+    } else if (data.username.length < 6) {
+      enqueueSnackbar("Username must be of atleast 6 characters.", {
+        variant: "warning",
+        duration: 6000,
+      });
+      return false;
+    } else if (!data.password.length) {
+      enqueueSnackbar("Password is a required field.", {
+        variant: "warning",
+        duration: 6000,
+      });
+      return false;
+    } else if (data.password.length < 6) {
+      enqueueSnackbar("Password must be of atleast 6 characters.", {
+        variant: "warning",
+        duration: 6000,
+      });
+      return false;
+    } else if (data.password !== data.confirmPassword) {
+      enqueueSnackbar("Password and confirm password do not match.", {
+        variant: "warning",
+        duration: 6000,
+      });
+      return false;
+    }
+    return true;
   };
 
   return (
@@ -77,7 +145,9 @@ const Register = () => {
             title="Username"
             name="username"
             placeholder="Enter Username"
+            value={username}
             fullWidth
+            onChange={(e) => setUsername(e.target.value)}
           />
           <TextField
             id="password"
@@ -86,8 +156,10 @@ const Register = () => {
             name="password"
             type="password"
             helperText="Password must be atleast 6 characters length"
+            value={password}
             fullWidth
             placeholder="Enter a password with minimum 6 characters"
+            onChange={(e) => setPassword(e.target.value)}
           />
           <TextField
             id="confirmPassword"
@@ -95,16 +167,28 @@ const Register = () => {
             label="Confirm Password"
             name="confirmPassword"
             type="password"
+            value={confirmPassword}
             fullWidth
+            onChange={(e) => setConfirmPassword(e.target.value)}
           />
-           <Button className="button" variant="contained">
-            Register Now
-           </Button>
+          {isBusy ? (
+            <Box display="flex" justifyContent="center">
+              <CircularProgress />
+            </Box>
+          ) : (
+            <Button
+              className="button"
+              variant="contained"
+              onClick={() => register({ username, password, confirmPassword })}
+            >
+              Register Now
+            </Button>
+          )}
           <p className="secondary-action">
             Already have an account?{" "}
-             <a className="link" href="#">
+            <a className="link" href="#">
               Login here
-             </a>
+            </a>
           </p>
         </Stack>
       </Box>
