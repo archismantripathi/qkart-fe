@@ -16,6 +16,7 @@ const Register = () => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isBusy, setIsBusy] = useState(false);
+  const history = useHistory();
   // TODO: CRIO_TASK_MODULE_REGISTER - Implement the register function
   /**
    * Definition for register handler
@@ -73,6 +74,7 @@ const Register = () => {
           });
       }
     setIsBusy(false);
+    history.push("/login");
   };
 
   // TODO: CRIO_TASK_MODULE_REGISTER - Implement user input validation logic
@@ -187,9 +189,9 @@ const Register = () => {
           )}
           <p className="secondary-action">
             Already have an account?{" "}
-            <a className="link" href="#">
+            <Link className="link" to="/login">
               Login here
-            </a>
+            </Link>
           </p>
         </Stack>
       </Box>
