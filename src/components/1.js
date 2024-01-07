@@ -12,9 +12,9 @@ import React, { useEffect, useState } from "react";
 import { config } from "../App";
 import Footer from "./Footer";
 import Header from "./Header";
-import ProductCard from "./ProductCard";
 import "./Products.css";
-
+import ProductCard from "./ProductCard";
+ 
 // Definition of Data Structures used
 /**
  * @typedef {Object} Product - Data on product available to buy
@@ -26,15 +26,11 @@ import "./Products.css";
  * @property {string} image - Contains URL for the product image
  * @property {string} _id - Unique ID for the product
  */
-
-
+ 
 const Products = () => {
-  const { enqueueSnackbar } = useSnackbar();
-
-  const [isBusyLoading, setIsBusyLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
   const [products, setProducts] = useState([]);
-  const [searchBox, setSearchBox] = useState("");
-  const [debounceTimeout, setDebounceTimeout] = useState(null);
+  const [timerId, setTimerId] = useState(null);
   // TODO: CRIO_TASK_MODULE_PRODUCTS - Fetch products data and store it
   /**
    * Make API call to get the products list and store it to display the products
@@ -74,29 +70,28 @@ const Products = () => {
    */
   const performAPICall = async () => {
     try {
-      const res = await axios.get(config.endpoint + "/products");
-      if (res.status === 200) {
-        return res.data;
-      } else
-        enqueueSnackbar("Something is not right!", {
-          variant: "warning",
-          duration: 6000,
-        });
+      const url = `${config.endpoint}/products`;
+      const res = await axios.get(url);
+      // const data = await res.json();
+      // console.log(res.data);
+      return res.data;
     } catch (error) {
-      if (error.response)
-          enqueueSnackbar(error.response.data.message, {
-            variant: "error",
-            duration: 6000,
-          });
-      else
-        enqueueSnackbar("Server is not reachable.", {
-          variant: "error",
-          duration: 6000,
-        });
+      console.log(">", error);
+      return [];
     }
-    return [];
   };
-
+ 
+  useEffect(() => {
+    performAPICall().then((data) => {
+      setLoading(false);
+      setProducts(data);
+    });
+ 
+    // const data = await performAPICall();
+    // setLoading(false);
+    // setProducts(data);
+  }, []);
+ 
   // TODO: CRIO_TASK_MODULE_PRODUCTS - Implement search logic
   /**
    * Definition for search handler
@@ -112,32 +107,20 @@ const Products = () => {
    *
    */
   const performSearch = async (text) => {
+    const url = `${config.endpoint}/products/search?value=${text}`;
+ 
     try {
-      const res = await axios.get(config.endpoint + "/products/search?value=" + text);
-      if (res.status === 200) {
-        return res.data;
-      } else
-        enqueueSnackbar("Something is not right!", {
-          variant: "warning",
-          duration: 6000,
-        });
+      const response = await axios.get(url);
+      if (response && response.status === 200) {
+        setProducts(response.data);
+      }
     } catch (error) {
-      if (error.response.status === 404)
+      if (error.response && error.response.status === 404) {
         setProducts([]);
-      else if (error.response)
-          enqueueSnackbar(error.response.data.message, {
-            variant: "error",
-            duration: 6000,
-          });
-      else
-        enqueueSnackbar("Server is not reachable.", {
-          variant: "error",
-          duration: 6000,
-        });
+      }
     }
-    return [];
   };
-
+ 
   // TODO: CRIO_TASK_MODULE_PRODUCTS - Optimise API calls with debounce search implementation
   /**
    * Definition for debounce handler
@@ -154,20 +137,14 @@ const Products = () => {
     if(debounceTimeout){
       clearTimeout(debounceTimeout);
     }
+   
     const timer = setTimeout(()=>{
-      performSearch(event.target.value).then(data => setProducts(data));
+      performSearch(event.target.value);
     }, 500);
-    setDebounceTimeout(timer);
+ 
+    setTimerId(timer);
   };
-
-  useEffect(() => {
-    if(isBusyLoading)
-      performAPICall().then(data => {
-        setIsBusyLoading(false);
-        setProducts(data);
-      });
-  });
-
+ 
   return (
     <div>
       <Header>
@@ -175,27 +152,19 @@ const Products = () => {
         <TextField
           className="search-desktop"
           size="small"
-          fullWidth
+          placeholder="Search for items/categories"
           InputProps={{
             endAdornment: (
-              <InputAdornment
-                position="end"
-                onClick={() => performSearch(searchBox).then(data => setProducts(data))}>
-                  <Search color="primary" />
+              <InputAdornment position="end">
+                <Search color="primary" />
               </InputAdornment>
             ),
           }}
-          placeholder="Search for items/categories"
           name="search"
-          value={searchBox}
-          onKeyPress={e => {if(e.key==="Enter") performSearch(searchBox)}}
-          onChange={e => {
-            setSearchBox(e.target.value);
-            debounceSearch(e, debounceTimeout);
-          }}
+          onChange={(e) => debounceSearch(e, timerId)}
         />
       </Header>
-
+ 
       {/* Search view for mobiles */}
       <TextField
         className="search-mobile"
@@ -203,22 +172,14 @@ const Products = () => {
         fullWidth
         InputProps={{
           endAdornment: (
-            <InputAdornment
-              position="end"
-              onClick={() => performSearch(searchBox).then(data => setProducts(data))}>
-                <Search color="primary" />
+            <InputAdornment position="end">
+              <Search color="primary" />
             </InputAdornment>
           ),
         }}
         placeholder="Search for items/categories"
         name="search"
-        sx={{ marginBottom: '2px' }}
-        value={searchBox}
-        onKeyPress={e => {if(e.key==="Enter") performSearch(searchBox)}}
-        onChange={e => {
-          setSearchBox(e.target.value);
-          debounceSearch(e, debounceTimeout);
-        }}
+        onChange={(e) => debounceSearch(e, timerId)}
       />
       <Grid container>
         <Grid item className="product-grid">
@@ -229,30 +190,31 @@ const Products = () => {
             </p>
           </Box>
         </Grid>
-        {isBusyLoading ? 
-          <Box className="loading">
-            <CircularProgress />
-            <p>Loading Products...</p>
-          </Box>
-        :
-        products.length > 0 ? 
-          <Grid container spacing={2} marginY={1} paddingX={1}>
-            {products.map((product) => (
-              <Grid item xs={6} md={3} key={product._id}>
-                <ProductCard product={product} />
-              </Grid>
-            ))}
-          </Grid>
-        :
-          <Box className="loading">
-            <SentimentDissatisfied />
-            <p>No products found</p>
-          </Box>
-        }
       </Grid>
+ 
+      {loading ? (
+        <Box className="loading">
+          <CircularProgress />
+          <h4>Loading Products...</h4>
+        </Box>
+      ) : products.length > 0 ? (
+        <Grid container spacing={2} marginY={1} paddingX={1}>
+          {products.map((product) => (
+            <Grid item xs={6} md={3} key={product._id}>
+              <ProductCard product={product} />
+            </Grid>
+          ))}
+        </Grid>
+      ) : (
+        <Box className="loading">
+          <SentimentDissatisfied />
+          <h4>No products found</h4>
+        </Box>
+      )}
+ 
       <Footer />
     </div>
   );
 };
-
+ 
 export default Products;

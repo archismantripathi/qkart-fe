@@ -13,3 +13,7 @@
     text-transform: none;
     font-weight: 600;
 }
+
+.card-image {
+    width: 100%;
+}
