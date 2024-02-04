@@ -42,41 +42,41 @@ const Login = () => {
    */
   const login = async (formData) => {
     setIsBusy(true);
-    
+
     if (validateInput(formData))
-    try {
-      const res = await axios.post(config.endpoint + "/auth/login", {
-        username,
-        password,
-      });
-      if (res.status === 201) {
-        enqueueSnackbar("Logged in successfully", {
-          variant: "success",
-          duration: 6000,
+      try {
+        const res = await axios.post(config.endpoint + "/auth/login", {
+          username,
+          password,
         });
-        persistLogin(res.data.token, res.data.username, res.data.balance);
-        setUsername("");
-        setPassword("");
-      } else
-      enqueueSnackbar("Something is not right!", {
-        variant: "warning",
-        duration: 6000,
-      });
-    } catch (error) {
-      console.log(error);
-      if (error.response)
-        enqueueSnackbar(error.response.data.message, {
-          variant: "error",
-          duration: 6000,
-        });
-      else
-        enqueueSnackbar("Server is not reachable.", {
-          variant: "error",
-          duration: 6000,
-        });
-    }
+        if (res.status === 201) {
+          enqueueSnackbar("Logged in successfully", {
+            variant: "success",
+            duration: 6000,
+          });
+          persistLogin(res.data.token, res.data.username, res.data.balance);
+          setUsername("");
+          setPassword("");
+          history.push("/");
+        } else
+          enqueueSnackbar("Something is not right!", {
+            variant: "warning",
+            duration: 6000,
+          });
+      } catch (error) {
+        console.log(error);
+        if (error.response)
+          enqueueSnackbar(error.response.data.message, {
+            variant: "error",
+            duration: 6000,
+          });
+        else
+          enqueueSnackbar("Server is not reachable.", {
+            variant: "error",
+            duration: 6000,
+          });
+      }
     setIsBusy(false);
-    history.push("/");
   };
 
   // TODO: CRIO_TASK_MODULE_LOGIN - Validate the input
@@ -155,7 +155,7 @@ const Login = () => {
       <Header hasHiddenAuthButtons />
       <Box className="content">
         <Stack spacing={2} className="form">
-        <h2 className="title">Login</h2>
+          <h2 className="title">Login</h2>
           <TextField
             id="username"
             label="Username"

@@ -56,6 +56,7 @@ const Register = () => {
           setUsername("");
           setPassword("");
           setConfirmPassword("");
+          history.push("/login");
         } else
           enqueueSnackbar("Something is not right!", {
             variant: "warning",
@@ -74,7 +75,6 @@ const Register = () => {
           });
       }
     setIsBusy(false);
-    history.push("/login");
   };
 
   // TODO: CRIO_TASK_MODULE_REGISTER - Implement user input validation logic
