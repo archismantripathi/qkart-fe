@@ -15,7 +15,6 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [isBusy, setIsBusy] = useState(false);
   const history = useHistory();
-  // TODO: CRIO_TASK_MODULE_LOGIN - Fetch the API response
   /**
    * Perform the Login API call
    * @param {{ username: string, password: string }} formData
@@ -79,7 +78,6 @@ const Login = () => {
     setIsBusy(false);
   };
 
-  // TODO: CRIO_TASK_MODULE_LOGIN - Validate the input
   /**
    * Validate the input values so that any bad or illegal values are not passed to the backend.
    *
@@ -123,7 +121,6 @@ const Login = () => {
     return true;
   };
 
-  // TODO: CRIO_TASK_MODULE_LOGIN - Persist user's login information
   /**
    * Store the login information so that it can be used to identify the user in subsequent API calls
    *
