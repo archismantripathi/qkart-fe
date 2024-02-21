@@ -74,25 +74,47 @@ export const generateCartItemsFrom = (cartData, productsData) => {
  *    Value of all items in the cart
  *
  */
+
 export const getTotalCartValue = (items) => {
   return items.reduce((acc, item) => acc + item.cost * item.qty, 0);
 };
 
+// TODO: CRIO_TASK_MODULE_CHECKOUT - Implement function to return total cart quantity
 /**
- * Component to display the current quantity for a product and + and - buttons to update product quantity on cart
+ * Return the sum of quantities of all products added to the cart
  *
- * @param {Number} value
- *    Current quantity of product in cart
+ * @param { Array.<CartItem> } items
+ *    Array of objects with complete data on products in cart
  *
- * @param {Function} handleAdd
- *    Handler function which adds 1 more of a product to cart
- *
- * @param {Function} handleDelete
- *    Handler function which reduces the quantity of a product in cart by 1
- *
+ * @returns { Number }
+ *    Total quantity of products added to the cart
  *
  */
-const ItemQuantity = ({ value, handleAdd, handleDelete }) => {
+export const getTotalItems = (items = []) => {
+};
+
+// TODO: CRIO_TASK_MODULE_CHECKOUT - Add static quantity view for Checkout page cart
+/**
+ * Component to display the current quantity for a product and + and - buttons to update product quantity on cart
+ * 
+ * @param {Number} value
+ *    Current quantity of product in cart
+ * 
+ * @param {Function} handleAdd
+ *    Handler function which adds 1 more of a product to cart
+ * 
+ * @param {Function} handleDelete
+ *    Handler function which reduces the quantity of a product in cart by 1
+ * 
+ * @param {Boolean} isReadOnly
+ *    If product quantity on cart is to be displayed as read only without the + - options to change quantity
+ * 
+ */
+const ItemQuantity = ({
+  value,
+  handleAdd,
+  handleDelete,
+}) => {
   return (
     <Stack direction="row" alignItems="center">
       <IconButton size="small" color="primary" onClick={handleDelete}>
