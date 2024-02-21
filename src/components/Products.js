@@ -16,6 +16,7 @@ import Header from "./Header";
 import ProductCard from "./ProductCard";
 import Cart from "./Cart";
 import "./Products.css";
+import { useHistory } from "react-router-dom";
 
 // Definition of Data Structures used
 /**
@@ -35,11 +36,13 @@ const Products = () => {
 
   const [isBusyLoading, setIsBusyLoading] = useState(true);
   const [products, setProducts] = useState([]);
+  const [cart, setCart] = useState([]);
   const [searchBox, setSearchBox] = useState("");
   const [debounceTimeout, setDebounceTimeout] = useState(null);
   const username = window.localStorage.getItem("username");
+  const token = window.localStorage.getItem("token");
+  const history = useHistory();
 
-  // TODO: CRIO_TASK_MODULE_PRODUCTS - Fetch products data and store it
   /**
    * Make API call to get the products list and store it to display the products
    *
@@ -101,7 +104,6 @@ const Products = () => {
     return [];
   };
 
-  // TODO: CRIO_TASK_MODULE_PRODUCTS - Implement search logic
   /**
    * Definition for search handler
    * This is the function that is called on adding new search keys
@@ -143,7 +145,6 @@ const Products = () => {
     return [];
   };
 
-  // TODO: CRIO_TASK_MODULE_PRODUCTS - Optimise API calls with debounce search implementation
   /**
    * Definition for debounce handler
    * With debounce, this is the function to be called whenever the user types text in the searchbar field
@@ -166,12 +167,14 @@ const Products = () => {
   };
 
   useEffect(() => {
-    if (isBusyLoading)
-      performAPICall().then((data) => {
-        setIsBusyLoading(false);
-        setProducts(data);
-      });
-  });
+    performAPICall().then((data) => {
+      setIsBusyLoading(false);
+      setProducts(data);
+    });
+    fetchCart(token).then((data) => {
+      setCart(data);
+    });
+  }, []);
 
   /**
    * Perform the API call to fetch the user's cart and return the response
@@ -205,7 +208,14 @@ const Products = () => {
     if (!token) return;
 
     try {
-      // TODO: CRIO_TASK_MODULE_CART - Pass Bearer token inside "Authorization" header to get data from "GET /cart" API and return the response data
+      const res = await axios.get(
+        config.endpoint + "/cart", { 
+          headers: {
+            "Authorization": "Bearer " + token
+          }
+        }
+      );
+      return res.data;
     } catch (e) {
       if (e.response && e.response.status === 400) {
         enqueueSnackbar(e.response.data.message, { variant: "error" });
@@ -279,12 +289,56 @@ const Products = () => {
     productId,
     qty,
     options = { preventDuplicate: false }
-  ) => {};
+  ) => {
+    if (!token) {
+      history.push("/login");
+      return;
+    }
+
+    if (options.preventDuplicate && items.find(item => item.productId === productId))
+      enqueueSnackbar(
+        "Item already in cart. Use the cart sidebar to update quantity or remove item.",
+        {
+          variant: "warning",
+        }
+      );
+
+    try {
+      const res = await axios.post(
+        config.endpoint + "/cart", {
+          productId,
+          qty
+          
+        }, 
+        { headers: {
+            "Authorization": "Bearer " + token
+          }
+        }
+      );
+      setCart(res.data);
+      if (res.status !== 200)
+        enqueueSnackbar("Something is not right!", {
+          variant: "warning",
+          duration: 6000,
+        });
+    } catch (e) {
+      if (e.response && e.response.status === 400) {
+        enqueueSnackbar(e.response.data.message, { variant: "error" });
+      } else {
+        enqueueSnackbar(
+          "Could not fetch cart details. Check that the backend is running, reachable and returns valid JSON.",
+          {
+            variant: "error",
+          }
+        );
+      }
+      return null;
+    }
+  };
 
   return (
     <div>
       <Header>
-        {/* TODO: CRIO_TASK_MODULE_PRODUCTS - Display search bar in the header for Products page */}
         <TextField
           className="search-desktop"
           size="small"
@@ -362,7 +416,7 @@ const Products = () => {
             <Grid container spacing={2} marginY={1} paddingX={1}>
               {products.map((product) => (
                 <Grid item xs={6} md={3} key={product._id}>
-                  <ProductCard product={product} />
+                  <ProductCard product={product} handleAddToCart={()=>{addToCart(token, cart, products, product._id, 1, { preventDuplicate: true })}} />
                 </Grid>
               ))}
             </Grid>
@@ -373,10 +427,9 @@ const Products = () => {
             </Box>
           )}
         </Grid>
-        {/* TODO: CRIO_TASK_MODULE_CART - Display the Cart component */}
         { username ? 
-          <Box sx={{ backgroundColor: "#E9F5E1", width: { xs: "100%", md: 1/4 } }}>
-            <Cart /> 
+          <Box md={3} xs={12} backgroundColor="#E9F5E1">
+            <Cart products={products} items={cart} handleQuantity={(productId, qty) => {addToCart(token, cart, products, productId, qty)}}/> 
           </Box> : '' }
       </Stack>
       <Footer />
