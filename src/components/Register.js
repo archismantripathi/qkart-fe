@@ -72,8 +72,8 @@ const Register = () => {
             variant: "error",
             duration: 6000,
           });
+        setIsBusy(false);
       }
-    setIsBusy(false);
   };
 
   /**
