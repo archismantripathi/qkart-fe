@@ -400,6 +400,10 @@ const Checkout = () => {
     };
     if (!token) {
       history.push("/login");
+      enqueueSnackbar("You must be logged in to access checkout page", {
+        variant: "warning",
+        duration: 6000,
+      });
       return;
     }
     onLoadHandler();
