@@ -398,6 +398,10 @@ const Checkout = () => {
         setItems(cartDetails);
       }
     };
+    if (!token) {
+      history.push("/login");
+      return;
+    }
     onLoadHandler();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

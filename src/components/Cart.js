@@ -79,7 +79,6 @@ export const getTotalCartValue = (items) => {
   return items.reduce((acc, item) => acc + item.cost * item.qty, 0);
 };
 
-// TODO: CRIO_TASK_MODULE_CHECKOUT - Implement function to return total cart quantity
 /**
  * Return the sum of quantities of all products added to the cart
  *
@@ -91,30 +90,32 @@ export const getTotalCartValue = (items) => {
  *
  */
 export const getTotalItems = (items = []) => {
+  return items.reduce((acc, item) => acc + item.qty, 0);
 };
 
-// TODO: CRIO_TASK_MODULE_CHECKOUT - Add static quantity view for Checkout page cart
 /**
  * Component to display the current quantity for a product and + and - buttons to update product quantity on cart
- * 
+ *
  * @param {Number} value
  *    Current quantity of product in cart
- * 
+ *
  * @param {Function} handleAdd
  *    Handler function which adds 1 more of a product to cart
- * 
+ *
  * @param {Function} handleDelete
  *    Handler function which reduces the quantity of a product in cart by 1
- * 
+ *
  * @param {Boolean} isReadOnly
  *    If product quantity on cart is to be displayed as read only without the + - options to change quantity
- * 
+ *
  */
-const ItemQuantity = ({
-  value,
-  handleAdd,
-  handleDelete,
-}) => {
+const ItemQuantity = ({ value, handleAdd, handleDelete, isReadOnly }) => {
+  if (isReadOnly)
+    return (
+      <Typography p={1} data-testid="item-qty">
+        Qty: {value}
+      </Typography>
+    );
   return (
     <Stack direction="row" alignItems="center">
       <IconButton size="small" color="primary" onClick={handleDelete}>
@@ -144,7 +145,7 @@ const ItemQuantity = ({
  *
  *
  */
-const Cart = ({ products, items = [], handleQuantity }) => {
+const Cart = ({ products, items = [], handleQuantity, isReadOnly }) => {
   const [cart, setCart] = useState([]);
 
   useEffect(() => {
@@ -193,6 +194,7 @@ const Cart = ({ products, items = [], handleQuantity }) => {
                     handleDelete={() =>
                       handleQuantity(item.productId, item.qty - 1)
                     }
+                    isReadOnly={isReadOnly}
                   />
                   <Typography variant="body1">
                     <b>${item.cost}</b>
@@ -222,19 +224,48 @@ const Cart = ({ products, items = [], handleQuantity }) => {
           </Box>
         </Box>
 
-        <Box display="flex" justifyContent="flex-end" className="cart-footer">
-          <Link to="/checkout">
-            <Button
-              color="primary"
-              variant="contained"
-              startIcon={<ShoppingCart />}
-              className="checkout-btn"
-            >
-              Checkout
-            </Button>
-          </Link>
-        </Box>
+        {isReadOnly ? (
+          ""
+        ) : (
+          <Box display="flex" justifyContent="flex-end" className="cart-footer">
+            <Link to="/checkout">
+              <Button
+                color="primary"
+                variant="contained"
+                startIcon={<ShoppingCart />}
+                className="checkout-btn"
+              >
+                Checkout
+              </Button>
+            </Link>
+          </Box>
+        )}
       </Box>
+      {isReadOnly ? (
+        <Box className="cart" my="-0.5rem">
+          <Stack sx={{ py: "1.5rem", m: "1rem" }}>
+            <Typography variant="h5" mb="1rem"><b>Order Details</b></Typography>
+            <Box sx={{ display: "flex", justifyContent: "space-between", mb: "0.5rem" }}>
+              <Typography variant="body1">Products</Typography>
+              <Typography variant="body1">{getTotalItems(cart)}</Typography>
+            </Box>
+            <Box sx={{ display: "flex", justifyContent: "space-between", mb: "0.5rem" }}>
+              <Typography variant="body1">Subtotal</Typography>
+              <Typography variant="body1">${getTotalCartValue(cart)}</Typography>
+            </Box>
+            <Box sx={{ display: "flex", justifyContent: "space-between", mb: "0.5rem" }}>
+              <Typography variant="body1">Shipping Charges</Typography>
+              <Typography variant="body1">$0</Typography>
+            </Box>
+            <Box sx={{ display: "flex", justifyContent: "space-between", mb: "0.5rem" }}>
+              <Typography variant="h6"><b>Total</b></Typography>
+              <Typography variant="h6"><b>${getTotalCartValue(cart)}</b></Typography>
+            </Box>
+          </Stack>
+        </Box>
+      ) : (
+        ""
+      )}
     </>
   );
 };

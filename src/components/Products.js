@@ -231,7 +231,6 @@ const Products = () => {
     }
   };
 
-  // TODO: CRIO_TASK_MODULE_CART - Return if a product already exists in the cart
   /**
    * Return if a product already is present in the cart
    *
